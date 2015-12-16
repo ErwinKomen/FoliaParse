@@ -1,0 +1,5 @@
+/Users/erwin/Data Files/vs2010/Projects/FoliaParse/obj/x86/Release/.NETFramework,Version=v4.0,Profile=Client.AssemblyAttribute.cs
+/Users/erwin/Data Files/vs2010/Projects/FoliaParse/bin/Release/FoliaParse.exe.mdb
+/Users/erwin/Data Files/vs2010/Projects/FoliaParse/bin/Release/FoliaParse.exe
+/Users/erwin/Data Files/vs2010/Projects/FoliaParse/obj/x86/Release/FoliaParse.exe
+/Users/erwin/Data Files/vs2010/Projects/FoliaParse/obj/x86/Release/FoliaParse.exe.mdb
