@@ -273,7 +273,7 @@ namespace FoliaParse.util {
     // History:
     // 26-06-2015  ERK Created
     // ------------------------------------------------------------------------------------------------------------
-    public XmlNode getCommonAncestor(ref XmlNode ndxBef, ref XmlNode ndxAft, string strCond, ref XmlNode ndxLeft, ref XmlNode ndxRight) {
+    public XmlNode getCommonAncestor(ref XmlNode ndxBef, ref XmlNode ndxAft, String strCond, ref XmlNode ndxLeft, ref XmlNode ndxRight) {
       XmlNode ndxMyBef = default(XmlNode);
       // My copy of ndxBef
       XmlNode ndxWork = default(XmlNode);

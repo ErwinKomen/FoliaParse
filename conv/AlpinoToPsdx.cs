@@ -29,6 +29,8 @@ namespace FoliaParse.conv {
     bool loc_bVersionOkay = false;
     XmlDocument pdxPsdx;
     private String sAlpFile;
+    private String sAttachmentType = "common_ancestor"; // How to attach
+
     // ============ Class initializer calls the base class =====================
     public AlpinoToPsdx(ErrHandle objErr) { 
       this.errHandle = objErr; 
@@ -381,13 +383,14 @@ namespace FoliaParse.conv {
                 System.Diagnostics.Debugger.Break();
               }
               // (3) Check for well-formedness: 
-              //     - Linear precedence: the last <eLeaf> child under my prospective PSDX parent
+              //     - Option #1 = Linear precedence: the last <eLeaf> child under my prospective PSDX parent
               //       must be my immediately linearly preceding neighbour
               //       Means: @end of rightmost ndxNewParent descendant == @begin of leftmost ndxEtree one
               //     - The word preceding me may not come after my parent-to-be in PSDX
               int intNprec = Convert.ToInt32(ndxEtree.SelectSingleNode("./descendant::psdx:eLeaf[1]", nmsPsdx).Attributes["n"].Value);
               // Dim ndxTest As XmlNode = ndxNewParent.SelectSingleNode("./following::eLeaf[@n=" & intNprec-1 & "]")
               XmlNode ndxTest = ndxNewParent.SelectSingleNode("./following::psdx:eLeaf[@n<" + intNprec + " and parent::psdx:eTree[not(@later)]]", nmsPsdx);
+              // Check: does the 1st word *following* the target in PSDX *precede* me?
               if (ndxTest != null) {
                 // (4) The order would be corrupted
                 // (4.1) Create a new node under the 'ndxNewParent' we determined
@@ -402,28 +405,78 @@ namespace FoliaParse.conv {
                 ndxIchLeaf.Attributes["Text"].Value = "*ICH*-" + intIchCounter;
                 // (4.3) The [ndxEtree] get a "-n" attached to my label
                 ndxEtree.Attributes["Label"].Value = ndxEtree.Attributes["Label"].Value + "-" + intIchCounter;
-                // (4.4) The [ndxEtree] must append as child under the parent of the node in PSDX
-                //         that has the @n minus 1
+                // (4.4) Attachment of the [ndxEtree] depends on the method chosen
                 int intN = Convert.ToInt32(ndxEtree.SelectSingleNode("./descendant::psdx:eLeaf[1]", nmsPsdx).Attributes["n"].Value);
-                // (4.5) So find our new parent-to-be
                 int intSubtract = 0;
-                do {
-                  intSubtract -= 1;
-                  ndxNewParent = ndxFor.SelectSingleNode("./descendant::psdx:eTree[child::psdx:eLeaf[@n = " + 
-                    (intN + intSubtract) + "]]", nmsPsdx);
-                  // Double checking
-                  if (ndxNewParent == null) {
-                    errHandle.DoError("modConvert/OneAlpinoToPsdxForest", 
-                      "warning: could not find leaf with @n=" + Convert.ToString(intN - 1));
-                    System.Diagnostics.Debugger.Break();
-                  }
-                } while (!(ndxNewParent.ParentNode.Name != "forest"));
-                // (4.6) we need to go one step upwards and check it still is an <eTree>
-                ndxNewParent = ndxNewParent.ParentNode;
-                if (ndxNewParent == null || ndxNewParent.Name != "eTree") {
-                  errHandle.DoError("modConvert/OneAlpinoToPsdxForest", 
-                    "warning: no suitable <eTree> grandparent for leaf with @n=" + Convert.ToString(intN - 1));
-                  System.Diagnostics.Debugger.Break();
+                switch (sAttachmentType) {
+                  case "preceding_parent":  // Append under the parent of the word preceding me
+                    // (4.5) The [ndxEtree] must append as child under the parent of the node in PSDX
+                    //         that has the @n minus 1
+                    // (4.6) Now find our new parent-to-be
+                    do {
+                      intSubtract -= 1;
+                      ndxNewParent = ndxFor.SelectSingleNode("./descendant::psdx:eTree[child::psdx:eLeaf[@n = " +
+                        (intN + intSubtract) + "]]", nmsPsdx);
+                      // Double checking
+                      if (ndxNewParent == null) {
+                        errHandle.DoError("modConvert/OneAlpinoToPsdxForest",
+                          "warning: could not find leaf with @n=" + Convert.ToString(intN - 1));
+                        System.Diagnostics.Debugger.Break();
+                      }
+                    } while (!(ndxNewParent.ParentNode.Name != "forest"));
+                    // (4.7) we need to go one step upwards and check it still is an <eTree>
+                    ndxNewParent = ndxNewParent.ParentNode;
+                    if (ndxNewParent == null || ndxNewParent.Name != "eTree") {
+                      errHandle.DoError("modConvert/OneAlpinoToPsdxForest",
+                        "warning: no suitable <eTree> grandparent for leaf with @n=" + Convert.ToString(intN - 1));
+                      System.Diagnostics.Debugger.Break();
+                    }
+                    break;
+                  case "common_ancestor": // Append under the lowest common ancestor of (1) [ndxNewParent] and (2) word preceding me
+                    // (4.8) Find the <eLeaf> preceding 'me'
+                    XmlNode ndxPrec; XmlNode ndxPrecLeaf;
+                    do {
+                      intSubtract -= 1;
+                      ndxPrec = ndxFor.SelectSingleNode("./descendant::psdx:eTree[child::psdx:eLeaf[@n = " +
+                        (intN + intSubtract) + "]]", nmsPsdx);
+                      // Double checking
+                      if (ndxPrec == null) {
+                        errHandle.DoError("modConvert/OneAlpinoToPsdxForest",
+                          "warning: could not find leaf with @n=" + Convert.ToString(intN +intSubtract));
+                        System.Diagnostics.Debugger.Break();
+                      }
+                      // Get the type of the <eLeaf> child
+                      ndxPrecLeaf = ndxPrec.SelectSingleNode("./child::psdx:eLeaf", nmsPsdx);
+                      if (ndxPrecLeaf == null) {
+                        // There is no preceding one?
+                        errHandle.DoError("modConvert/OneAlpinoToPsdxForest",
+                          "warning: no leaf found at n=" + Convert.ToString(intN+intSubtract));
+                        System.Diagnostics.Debugger.Break();
+                      }
+                    } while (ndxPrec.ParentNode.Name == "forest" || ndxPrecLeaf.Attributes["Type"].Value != "Vern");
+
+                    //XmlNode ndxPrec = ndxEtree.SelectSingleNode("./preceding::psdx:eLeaf[@Type='Vern' and @n < " + intN + "][1]/parent::psdx:eTree", nmsPsdx);
+                    if (ndxPrec == null) {
+                      // There is no preceding one?
+                      errHandle.DoError("modConvert/OneAlpinoToPsdxForest",
+                        "warning: no preceding node before " + Convert.ToString(intN));
+                      System.Diagnostics.Debugger.Break();
+                    }
+                    // (4.8) Find common ancestor
+                    XmlNode ndxLeft = null;
+                    XmlNode ndxRight = null;
+                    XmlNode ndxCommon = oXmlTools.getCommonAncestor(ref ndxNewParent, ref ndxPrec, "", ref ndxLeft, ref ndxRight);
+                    // (4.9) Do we have a lowest-common-ancestor?
+                    if (ndxCommon == null) {
+                      // There is no common ancestor
+                      errHandle.DoError("modConvert/OneAlpinoToPsdxForest",
+                        "warning: no common ancestor for node with @n=" + Convert.ToString(intN-1));
+                      System.Diagnostics.Debugger.Break();
+                    } else {
+                      // (4.10) There is a common ancestor: append under it
+                      ndxNewParent = ndxCommon;
+                    }
+                    break;
                 }
               }
               // (5) The order is okay, so append [ndxEtree] as child
