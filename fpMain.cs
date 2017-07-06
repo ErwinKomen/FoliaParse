@@ -31,6 +31,7 @@ namespace FoliaParse {
       String sParsed = "";      // Directory where parsed files are kept
       bool bIsDebug = false;    // Debugging
       bool bKeepGarbage = false;// Keep garbage?
+      bool bUseAlpReader = true;  // By default make use of the alpino reader
 
       try {
         // Check command-line options
@@ -54,6 +55,9 @@ namespace FoliaParse {
                 break;
               case "a": // Alpino executable location (alternative w.r.t. default Science one)
                 sAlpino = args[++i].ToLower();
+                break;
+              case "n": // Do  not use the alpino reader
+                bUseAlpReader = false;
                 break;
               case "g": // Keep garbage for manual inspection
                 bKeepGarbage = true;
@@ -104,7 +108,7 @@ namespace FoliaParse {
         // Loop through the input files
         for (int i = 0; i < arInput.Length; i++) {
           // Parse this input file to the output directory
-          if (!objConv.ParseOneFoliaWithAlpino(arInput[i], sOutput, sParsed, bIsDebug, sMethod, bKeepGarbage)) {
+          if (!objConv.ParseOneFoliaWithAlpino(arInput[i], sOutput, sParsed, bIsDebug, sMethod, bUseAlpReader, bKeepGarbage)) {
             errHandle.DoError("Main","Could not parse file [" + arInput[i] + "]");
             return;
           }

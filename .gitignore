@@ -1,0 +1,8 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/bin/Debug/FoliaParse.vshost.exe.manifest
+/obj/x86/Debug/DesignTimeResolveAssemblyReferencesInput.cache
+/Books_364-zin443.txt
+/bin/Debug/FoliaParse.vshost.exe

@@ -44,7 +44,7 @@ namespace FoliaParse {
      * 6/oct/2015 ERK Added @sMethod
        ------------------------------------------------------------------------------------- */
     public bool ParseOneFoliaWithAlpino(String sFileIn, String sDirOut, String sDirParsed,
-        bool bIsDebug, String sMethod, bool bKeepGarbage) {
+        bool bIsDebug, String sMethod, bool bUseAlpReader, bool bKeepGarbage) {
       XmlDocument pdxSent = null; // The folia input sentence
       XmlNode ndxFoliaS;          // Input FoLiA format sentence
       XmlNamespaceManager nsFolia;// Namespace manager for folia input
@@ -73,11 +73,13 @@ namespace FoliaParse {
 
 
         // Try to open an alpino reader
-        if (rdAlp == null) rdAlp = new AlpinoReader(sDirParsed, sDirOut);
-        if (rdAlp == null) {
-          errHandle.Status("NO alpinoreader. DirParsed=" + sDirParsed);
-        } else {
-          errHandle.Status("Have alpinoreader. DirParsed=" + sDirParsed);
+        if (bUseAlpReader) {
+          if (rdAlp == null) rdAlp = new AlpinoReader(sDirParsed, sDirOut);
+          if (rdAlp == null) {
+            errHandle.Status("NO alpinoreader. DirParsed=" + sDirParsed);
+          } else {
+            errHandle.Status("Have alpinoreader. DirParsed=" + sDirParsed);
+          }
         }
 
         // Other initialisations
@@ -610,6 +612,7 @@ namespace FoliaParse {
         }
         // Combining the words together depends on @sType
         String sBack = "";
+        // errHandle.Status("foliaTokenize #1");
         switch (sType) {
           case "bare":
             // Combine identifier and words into sentence
@@ -618,8 +621,10 @@ namespace FoliaParse {
           case "folia":
             // Combine identifier and words into sentence
             StringBuilder sb = new StringBuilder();
+            // errHandle.Status("foliaTokenize #2: " + lstWords.Count);
             for (int i = 0; i < lstWords.Count; i++) {
               XmlNode ndxW = ndxList.Item(i);
+              // errHandle.Status("foliaTokenize #3: " + ((ndxW == null) ? "null" : "ok"));
               String sPosTag = ndxW.SelectSingleNode("./child::df:pos", nsFolia).Attributes["class"].Value;
               String sLemma = ndxW.SelectSingleNode("./child::df:lemma", nsFolia).Attributes["class"].Value;
               // Make sure a word does *NOT* contain spaces!!
@@ -632,7 +637,7 @@ namespace FoliaParse {
         // Return the result
         return sBack;
       } catch (Exception ex) {
-        errHandle.DoError("foliaTokenize", ex); // Provide standard error message
+        errHandle.DoError("foliaTokenize ("+sType+")", ex); // Provide standard error message
         return "";
         throw;
       }
@@ -689,7 +694,7 @@ namespace FoliaParse {
             // Wait for its completion
             prThis.WaitForExit();
             // ============ DEBUG ==========
-            debug("ALP[" + prThis.ExitCode + "]\n");
+            debug("ALP-a[" + prThis.ExitCode + "]\n");
             // =============================
           }
           // Check if ANY .xml files have been produced
@@ -706,7 +711,7 @@ namespace FoliaParse {
               // Wait for its completion
               prThis.WaitForExit();
               // ============ DEBUG ==========
-              debug("ALP[" + prThis.ExitCode + "]\n");
+              debug("ALP-b[" + prThis.ExitCode + "]\n");
               // =============================
             }
             // Again check the outcome
