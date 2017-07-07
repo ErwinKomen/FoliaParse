@@ -148,13 +148,37 @@ namespace FoliaParse.conv {
         }
         // Get a list of <eTree> nodes that have an <eLeaf> child
         ndxList = ndxFor.SelectNodes("./descendant::eTree[count(child::eLeaf)>0]");
+        // int iWordCount = 0; // Separate counter to keep track of corresponding ones in [lWords]
+        // int iStarId = 1;    // ID's for star and zero's
         for (intI = 0; intI < ndxList.Count; intI++) {
           // Capture the current node
           XmlNode ndxCurrentNode = ndxList[intI];
           // Get to the leaf
           ndxLeaf = ndxCurrentNode.SelectSingleNode("./child::eLeaf[1]");
-          // Create a new <w> node under <s>
+          //// Should we increment the word counter?
+          //switch (ndxLeaf.Attributes["Type"].Value) {
+          //  case "Star":
+          //  case "Zero":
+          //    // Create a unique id for this star/zero item
+          //    strWid = strSid +".z." + iStarId;
+          //    // Keep count of the star/zero items
+          //    iStarId++;
+          //    break;
+          //  default:
+          //    // Retrieve the original <w> id 
+          //    strWid = lWords[iWordCount].Attributes["xml:id"].Value;
+          //    // Keep track of the count in the [lWords] list
+          //    iWordCount++;                                           
+          //    break;
+          //}
+          ////if (intI < lWords.Count) {
+          ////  strWid = lWords[intI].Attributes["xml:id"].Value;
+          ////} else {
+          ////  strWid = strSid + "." + (intI + 1);
+          ////}
           strWid = strSid + "." + (intI + 1);
+
+          // Create a new <w> node under <s>
           ndxW = oXmlTools.AddXmlChild(ndxS, "w", "xml:id", strWid, "attribute", 
             "class", ndxLeaf.Attributes["Type"].Value, "attribute", 
             "t", ndxLeaf.Attributes["Text"].Value, "child");

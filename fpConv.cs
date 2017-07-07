@@ -403,17 +403,22 @@ namespace FoliaParse {
                     String sSentId = ndxFoliaS.Attributes["xml:id"].Value;
                     String sLogMsg = "s2[" + iSentNum + "]: " + sSentId + "\r";
                     Console.Write(sLogMsg);
-                    /*
+                    /* */
                     // =============== debugging ==========
-                    if (sSentId == "WR-P-P-B-0000000352.p.59.s.2") {
+                    if (sSentId == "BVws9.s.15") {
                       int iErwin = 55;
                     }
                     // ====================================
-                     * */
+                     /* */
                     File.AppendAllText(sFileOutLog, sLogMsg);
 
                     // (3b) Get a list of <w> nodes under this <s>
                     List<XmlNode> lstW = oXmlTools.FixList(ndxFoliaS.SelectNodes("./descendant::df:w", nsFolia));
+
+                    // (3c) To prevent structure within the <s>/<w> layer, re-number the word identifiers
+                    for (int iLstW=0;iLstW < lstW.Count;iLstW++) {
+                      lstW[iLstW].Attributes["xml:id"].Value = sSentId + ".w." + (iLstW + 1);
+                    }
 
                     // (4) retrieve the parse of the tokenized sentence
                     String sAlpFile = sFileOutDir + "/" + iSentNum + ".xml";
@@ -440,7 +445,13 @@ namespace FoliaParse {
                     XmlNode ndxLastW = ndxFoliaS.SelectSingleNode("./descendant::df:w[last()]", nsFolia);
                     for (int j = 0; j < lstW.Count; j++) {
                       // Get this element and the class
-                      XmlNode ndxOneW = lstW[j]; String sClass = ndxOneW.Attributes["class"].Value;
+                      XmlNode ndxOneW = lstW[j];
+                      // Double check if there is a class attribute
+                      if (ndxOneW.Attributes["class"] == null) {
+                        // Create it
+                        int stop = 1;
+                      }
+                      String sClass = ndxOneW.Attributes["class"].Value;
                       // Action depends on type
                       switch (sClass) {
                         case "Zero":
