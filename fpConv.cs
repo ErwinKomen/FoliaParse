@@ -57,6 +57,7 @@ namespace FoliaParse {
       List<String> lstSentId;     // Container for the FoLiA id's of the tokenized sentences
       List<XmlDocument> lstAlp;   // Container for the Alpino parses
       List<String> lstAlpFile;    // Alpino file names
+      bool bRemoveXmlns = false;  // Remove the XMLNS or not
 
       try {
         // Validate
@@ -374,14 +375,20 @@ namespace FoliaParse {
                     // (3) Add the Lassy syntactic annotations
                     oXmlTools.SetXmlDocument(pdxAnn);
                     ndxFoliaS = pdxAnn.SelectSingleNode("./descendant-or-self::df:annotations", nsFolia);
-                    oXmlTools.AddXmlChild(ndxFoliaS, "dependency-annotation",
-                      "annotator", "Lassy/Alpino", "attribute",
-                      "annotatortype", "automatic", "attribute",
-                      "set", "http://www.let.rug.nl/vannoord/Lassy/", "attribute");
+                    // Check if dependency is already available or not
+                    XmlNode ndxDep = ndxFoliaS.SelectSingleNode("./child::df:dependency-annotation", nsFolia);
+                    if (ndxDep == null) {
+                      // Only add the dependency-annotation set, if this is not already there (e.g. by frogging)
+                      // Note: see http://www.let.rug.nl/vannoord/Lassy/
+                      oXmlTools.AddXmlChild(ndxFoliaS, "dependency-annotation",
+                        "annotator", "Lassy/Alpino", "attribute",
+                        "annotatortype", "auto", "attribute",
+                        "set", "http://www.let.rug.nl/vannoord/Lassy/", "attribute");
+                    }
                     oXmlTools.AddXmlChild(ndxFoliaS, "syntax-annotation",
                       "annotator", "Cesax/FoliaParse.exe (surfacing)", "attribute",
-                      "annotatortype", "automatic", "attribute",
-                      "set", "http://erwinkomen.ruhosting.nl/foliaparse/", "attribute");
+                      "annotatortype", "auto", "attribute",
+                      "set", "foliaparse", "attribute");
                     // (10) Write the new <annotations> node to the writer
                     XmlReader rdResult = XmlReader.Create(new StringReader(ndxFoliaS.SelectSingleNode("./descendant-or-self::df:annotations", nsFolia).OuterXml));
                     wrFolia.WriteNode(rdResult, true);
@@ -501,15 +508,17 @@ namespace FoliaParse {
               wrTmp = null;
             }
             // ======= THIRD PASS ===============
-            // Open input file and output file
-            using (StreamReader rdText = new StreamReader(sFileTmp)) {
-              using (StreamWriter wrText = new StreamWriter(sFileOut)) {
-                String sLine;
-                while ((sLine = rdText.ReadLine()) != null) {
-                  // Remove the xmlns
-                  sLine = regQuoted.Replace(sLine, "");
-                  // Write the result
-                  wrText.WriteLine(sLine);
+            if (bRemoveXmlns) {
+              // Open input file and output file
+              using (StreamReader rdText = new StreamReader(sFileTmp)) {
+                using (StreamWriter wrText = new StreamWriter(sFileOut)) {
+                  String sLine;
+                  while ((sLine = rdText.ReadLine()) != null) {
+                    // Remove the xmlns
+                    sLine = regQuoted.Replace(sLine, "");
+                    // Write the result
+                    wrText.WriteLine(sLine);
+                  }
                 }
               }
             }
