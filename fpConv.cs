@@ -27,6 +27,7 @@ namespace FoliaParse {
     private String loc_AlpinoProgram = ALPINO_PROGRAM;
     private AlpinoReader rdAlp = null;         // Alpino reader -- access to parsed files
     private Regex regQuoted = new Regex("xmlns(\\:(\\w)*)?=\"(.*?)\"");
+    private Regex regEmptyXmlns = new Regex("xmlns(\\:(\\w)*)?=\"\"");
     // ======================== Getters and setters =======================================
     public void setAlpino(String sLoc) { this.loc_AlpinoProgram = sLoc; }
 
@@ -57,7 +58,7 @@ namespace FoliaParse {
       List<String> lstSentId;     // Container for the FoLiA id's of the tokenized sentences
       List<XmlDocument> lstAlp;   // Container for the Alpino parses
       List<String> lstAlpFile;    // Alpino file names
-      bool bRemoveXmlns = false;  // Remove the XMLNS or not
+      bool bRemoveXmlns = true;  // Remove the XMLNS or not
 
       try {
         // Validate
@@ -508,17 +509,20 @@ namespace FoliaParse {
               wrTmp = null;
             }
             // ======= THIRD PASS ===============
-            if (bRemoveXmlns) {
-              // Open input file and output file
-              using (StreamReader rdText = new StreamReader(sFileTmp)) {
-                using (StreamWriter wrText = new StreamWriter(sFileOut)) {
-                  String sLine;
-                  while ((sLine = rdText.ReadLine()) != null) {
-                    // Remove the xmlns
+            // Open input file and output file
+            using (StreamReader rdText = new StreamReader(sFileTmp)) {
+              using (StreamWriter wrText = new StreamWriter(sFileOut)) {
+                String sLine;
+                while ((sLine = rdText.ReadLine()) != null) {
+                  if (bRemoveXmlns) {
+                    // Remove All xmlns
                     sLine = regQuoted.Replace(sLine, "");
-                    // Write the result
-                    wrText.WriteLine(sLine);
+                    if (sLine.Contains("<FoLiA")) {
+                      sLine = sLine.Replace("<FoLiA", "<FoLiA xmlns:xlink=\"http://www.w3.org/1999/xlink\" xmlns=\"http://ilk.uvt.nl/folia\" ");
+                    }
                   }
+                  // Write the result
+                  wrText.WriteLine(sLine);
                 }
               }
             }
