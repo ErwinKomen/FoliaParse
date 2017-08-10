@@ -677,7 +677,7 @@ namespace FoliaParse {
       List<String> lstAlpFile, bool bIsDebug) {
       XmlDocument pdxThis = new XmlDocument();
       String[] arFiles;
-      
+      int iDebugLevel = 1;
 
       try {
         // Initialize results list
@@ -704,12 +704,19 @@ namespace FoliaParse {
           startInfo.Arguments = ALPINO_ARGS.Replace("$dir_name", sTmpDir);
           startInfo.UseShellExecute = false;
           startInfo.RedirectStandardInput = true;
+          startInfo.ErrorDialog = false;
+          startInfo.RedirectStandardError = true;
           // ============ DEBUG ==========
           // debug("parseAlpino: [" + sTokSent + "]");
+          if (iDebugLevel>0) {
+            debug("Command to alpino: \n" + this.loc_AlpinoProgram + " " + startInfo.Arguments + "\n");
+          }
           // =============================
 
           // Start the program *synchronously*
           using (Process prThis = Process.Start(startInfo)) {
+            // Show which process is being used
+            debug("ALP process: " + prThis.Id + " name=" + prThis.ProcessName);
             // Set the standard input to the tokens
             StreamWriter swStdIn = prThis.StandardInput;
             // Write our sentence to the standard input
