@@ -42,6 +42,8 @@ namespace FoliaParse.conv {
             loc_iAlpIndex = 0;  // Signal that we are ready
           else
             loc_iAlpIndex = -1; // Signal there is failure
+        } else {
+          errHandle.DoError("AlpinoReader/classInit", "Cannot find *.index files in dir [" + sDirParsed + "]");
         }
       }
     }
@@ -64,6 +66,11 @@ namespace FoliaParse.conv {
         // Initialisations:
         loc_iParsed = 0;
         loc_iAlpIndex = -1;
+        // Sanity check
+        if (loc_arParsed == null) {
+          errHandle.DoError("AlpinoReader/findSentId", "There is no [loc_arParsed]");
+          return false;
+        }
         // Walk all index files from beginning until end
         for (int i = 0; i < loc_arParsed.Length; i++) {
           // Show where we are

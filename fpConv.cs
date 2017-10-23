@@ -648,12 +648,30 @@ namespace FoliaParse {
             // errHandle.Status("foliaTokenize #2: " + lstWords.Count);
             for (int i = 0; i < lstWords.Count; i++) {
               XmlNode ndxW = ndxList.Item(i);
-              // errHandle.Status("foliaTokenize #3: " + ((ndxW == null) ? "null" : "ok"));
-              String sPosTag = ndxW.SelectSingleNode("./child::df:pos", nsFolia).Attributes["class"].Value;
-              String sLemma = ndxW.SelectSingleNode("./child::df:lemma", nsFolia).Attributes["class"].Value;
-              // Make sure a word does *NOT* contain spaces!!
-              String sWord = lstWords[i].Replace(" ", "");
-              sb.Append("[ @folia " + sLemma + " " + sPosTag + " " + sWord + " ] ");
+              // Get the 'class' attribute of the word to check for emoticons
+              String sWrdClass = ndxW.Attributes["class"].Value;
+              if (sWrdClass.ToLower() == "emoticon") {
+                sb.Append("[ @folia x emoji x ] ");
+              } else if (sWrdClass.ToLower() == "symbol") {
+                sb.Append("[ @folia x symbol x ] ");
+              } else if (sWrdClass.ToLower() == "unknown") {
+                sb.Append("[ @folia x unknown x ] ");
+              } else if (sWrdClass.ToLower() == "reverse-smiley") {
+                sb.Append("[ @folia x rsmiley x ] ");
+              } else if (sWrdClass.ToLower() == "smiley") {
+                sb.Append("[ @folia x smiley x ] ");
+              } else {
+                // errHandle.Status("foliaTokenize #3: " + ((ndxW == null) ? "null" : "ok"));
+                String sPosTag = ndxW.SelectSingleNode("./child::df:pos", nsFolia).Attributes["class"].Value;
+                String sLemma = ndxW.SelectSingleNode("./child::df:lemma", nsFolia).Attributes["class"].Value;
+                // Make sure a word does *NOT* contain spaces!!
+                String sWord = lstWords[i].Replace(" ", "");
+                // Remove non-printing characters from [sWord] and [sLemma]
+                sWord = Regex.Replace(sWord, @"\p{Cs}", "");
+                sLemma = Regex.Replace(sLemma, @"\p{Cs}", "");
+                // Add this line
+                sb.Append("[ @folia " + sLemma + " " + sPosTag + " " + sWord + " ] ");
+              }
             }
             sBack = sb.ToString();
             break;

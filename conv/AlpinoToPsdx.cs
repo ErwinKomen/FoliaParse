@@ -471,7 +471,14 @@ namespace FoliaParse.conv {
                       // There is no common ancestor
                       errHandle.DoError("modConvert/OneAlpinoToPsdxForest",
                         "warning: no common ancestor for node with @n=" + Convert.ToString(intN-1));
-                      System.Diagnostics.Debugger.Break();
+                      if (ndxNewParent == null) {
+                        errHandle.DoError("modConvert/OneAlpinoToPsdxForest", "warning: ndxnewParent is null");
+                      }
+                      if (ndxPrec == null) {
+                        errHandle.DoError("modConvert/OneAlpinoToPsdxForest", "warning: ndxPrec is null");
+                      }
+                      // Break here -- we cannot continue without common ancestor
+                      // System.Diagnostics.Debugger.Break();
                     } else {
                       // (4.10) There is a common ancestor: append under it
                       ndxNewParent = ndxCommon;
