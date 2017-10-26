@@ -649,7 +649,13 @@ namespace FoliaParse {
             for (int i = 0; i < lstWords.Count; i++) {
               XmlNode ndxW = ndxList.Item(i);
               // Get the 'class' attribute of the word to check for emoticons
-              String sWrdClass = ndxW.Attributes["class"].Value;
+              XmlAttribute ndxWclass = ndxW.Attributes["class"];
+              String sWrdClass = "";
+              if (ndxWclass == null) {
+                sWrdClass = "";
+              } else {
+                sWrdClass = ndxW.Attributes["class"].Value;
+              }
               if (sWrdClass.ToLower() == "emoticon") {
                 sb.Append("[ @folia x emoji x ] ");
               } else if (sWrdClass.ToLower() == "symbol") {
