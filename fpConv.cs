@@ -627,6 +627,11 @@ namespace FoliaParse {
     }
     private String foliaTokenize(XmlNodeList ndxList, XmlNamespaceManager nsFolia, String sType = "bare") {
       try {
+        // Validate
+        if (ndxList == null) {
+          // Should not have happened
+          errHandle.DoError("foliaTokenize", "The input list is empty"); 
+        }
         // Put the words into a list, as well as the identifiers
         List<String> lstWords = new List<string>();
         List<String> lstWrdId = new List<string>();
@@ -634,6 +639,7 @@ namespace FoliaParse {
           lstWords.Add(ndxList.Item(i).SelectSingleNode("./child::df:t", nsFolia).InnerText);
           lstWrdId.Add(ndxList.Item(i).Attributes["xml:id"].Value);
         }
+        // errHandle.Status("foliaTokenize point #1");
         // Combining the words together depends on @sType
         String sBack = "";
         // errHandle.Status("foliaTokenize #1");
@@ -647,15 +653,19 @@ namespace FoliaParse {
             StringBuilder sb = new StringBuilder();
             // errHandle.Status("foliaTokenize #2: " + lstWords.Count);
             for (int i = 0; i < lstWords.Count; i++) {
+              //errHandle.Status("foliaTokenize point #3a, i=" + i);
               XmlNode ndxW = ndxList.Item(i);
+              //errHandle.Status("foliaTokenize point #3b, i=" + i);
               // Get the 'class' attribute of the word to check for emoticons
               XmlAttribute ndxWclass = ndxW.Attributes["class"];
               String sWrdClass = "";
+              //errHandle.Status("foliaTokenize point #3c, i=" + i);
               if (ndxWclass == null) {
                 sWrdClass = "";
               } else {
                 sWrdClass = ndxW.Attributes["class"].Value;
               }
+              // errHandle.Status("foliaTokenize point #3d, i=" + i);
               if (sWrdClass.ToLower() == "emoticon") {
                 sb.Append("[ @folia x emoji x ] ");
               } else if (sWrdClass.ToLower() == "symbol") {
@@ -667,16 +677,30 @@ namespace FoliaParse {
               } else if (sWrdClass.ToLower() == "smiley") {
                 sb.Append("[ @folia x smiley x ] ");
               } else {
+                // errHandle.Status("foliaTokenize point #3e, i=" + i);
                 // errHandle.Status("foliaTokenize #3: " + ((ndxW == null) ? "null" : "ok"));
-                String sPosTag = ndxW.SelectSingleNode("./child::df:pos", nsFolia).Attributes["class"].Value;
-                String sLemma = ndxW.SelectSingleNode("./child::df:lemma", nsFolia).Attributes["class"].Value;
+                String sPosTag = "";
+                XmlNode ndxPos = ndxW.SelectSingleNode("./child::df:pos", nsFolia);
+                if (ndxPos != null) {
+                  sPosTag = ndxPos.Attributes["class"].Value;
+                }
+
+                XmlNode ndxLemma = ndxW.SelectSingleNode("./child::df:lemma", nsFolia);
+                String sLemma = "";
+                if (ndxLemma != null) {
+                  sLemma = ndxLemma.Attributes["class"].Value;
+                }
                 // Make sure a word does *NOT* contain spaces!!
                 String sWord = lstWords[i].Replace(" ", "");
                 // Remove non-printing characters from [sWord] and [sLemma]
                 sWord = Regex.Replace(sWord, @"\p{Cs}", "");
                 sLemma = Regex.Replace(sLemma, @"\p{Cs}", "");
                 // Add this line
-                sb.Append("[ @folia " + sLemma + " " + sPosTag + " " + sWord + " ] ");
+                if (sLemma == "" && sPosTag == "") {
+                  sb.Append(sWord + " ");
+                } else {
+                  sb.Append("[ @folia " + sLemma + " " + sPosTag + " " + sWord + " ] ");
+                }
               }
             }
             sBack = sb.ToString();
