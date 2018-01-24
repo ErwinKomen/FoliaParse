@@ -670,6 +670,8 @@ namespace FoliaParse {
                 sb.Append("[ @folia x emoji x ] ");
               } else if (sWrdClass.ToLower() == "symbol") {
                 sb.Append("[ @folia x symbol x ] ");
+              } else if (sWrdClass.ToLower() == "pictogram") {
+                sb.Append("[ @folia x pictogram x ] ");
               } else if (sWrdClass.ToLower() == "unknown") {
                 sb.Append("[ @folia x unknown x ] ");
               } else if (sWrdClass.ToLower() == "reverse-smiley") {
