@@ -284,8 +284,10 @@ namespace FoliaParse.conv {
                 ndxS = lWords[0].SelectSingleNode("./ancestor-or-self::df:s", nsDF);
               } else {
                 ndxS = lWords[0].SelectSingleNode("./ancestor-or-self::s");
-                if (ndxS == null)
+                if (ndxS == null) {
                   ndxS = lWords[0].SelectSingleNode("./ancestor-or-self::df:s", nsDF);
+                  bUseNs = true;
+                }
               }
               oXmlTools.SetXmlDocument(ndxS.OwnerDocument);
               ndxW = oXmlTools.AddXmlChild(ndxS, "w", 
@@ -326,6 +328,27 @@ namespace FoliaParse.conv {
           }
           // Add the <wref> element pointing to the <eLeaf> within Folia
           oXmlTools.SetXmlDocument(ndxSu.OwnerDocument);
+
+          String tValue = "";
+          // Method 1:
+          tValue = ndxLeaf.Attributes["Text"].Value;
+          // Method 2: look for the correct item in [lWords]
+          foreach (XmlNode ndxItem in lWords) {
+            // Is this the one?
+            if (ndxItem.Attributes["xml:id"].Value == strWid) {
+              // Found it
+              XmlNode ndxFoundItem = ndxItem.SelectSingleNode("./child::df:t", nsDF);
+              if (ndxFoundItem == null) {
+                int iStop = 1;
+                // This is a star, so return empty
+                tValue = "";
+              } else {
+                tValue = ndxFoundItem.InnerText;
+              }
+              break;
+            }
+          }
+
           ndxWref = oXmlTools.AddXmlChild(ndxSu, "wref", 
             "id", strWid, "attribute", 
             "t", ndxLeaf.Attributes["Text"].Value, "attribute");
