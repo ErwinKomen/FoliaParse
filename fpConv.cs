@@ -103,6 +103,7 @@ namespace FoliaParse {
         // Action depends on the processing method
         switch (sMethod) {
           case "file":
+            #region method_file
             // Open the input file
             debug("Loading: " + sFileIn);
             XmlDocument pdxConv = new XmlDocument();
@@ -178,8 +179,10 @@ namespace FoliaParse {
             // Write the result
             pdxConv.Save(sFileOut);            
             break;
-            // =============== END of method "file" =============================
+          #endregion
+          // =============== END of method "file" =============================
           case "sentence":
+            #region method_sentence
             // Open the input file
             debug("Starting: " + sFileIn);
             // Open file for XmlRead input
@@ -278,14 +281,18 @@ namespace FoliaParse {
             // Finish writing
             wrFolia.Close();
             break;
-            // =============== END of method "sentence" =============================
+          #endregion
+          // =============== END of method "sentence" =============================
           case "twopass": case "two-pass":
+            #region method_twopass
             // The 'twopass' method:
             //      (1) Read the FoLiA with a stream-reader sentence-by-sentence
             //          a. Extract the sencence text (tokenize)
             //          b. Parse it using Alpino
             //          c. Save the parse in a sub-directory
             //      (2) Read the Folia with a stream-reader again sentence-by-sentence
+            //          a. Read the <s> from the FoLiA
+            //          b. Get a list of <w> elements in the <s>
             //          a. Retrieve the stored Alpino parse
             //          b. Alpino >> Psdx + adaptation of structure
             //          c. Psdx >> Folia 
@@ -303,6 +310,7 @@ namespace FoliaParse {
             if (sFileOutDir.EndsWith("/") || sFileOutDir.EndsWith("\\")) 
               sFileOutDir = sFileOutDir.Substring(0, sFileOutDir.Length - 1);
             // =============== FIRST PASS ====================
+            #region first_pass
             // Open only input file
             rdFolia = XmlReader.Create(new StreamReader(sFileIn));
             // Walk through the input file
@@ -349,9 +357,11 @@ namespace FoliaParse {
             }
             // Finish reading input
             rdFolia.Close();
+            #endregion
             // ======= SECOND PASS ===============
             String sFileTmp = sFileOut + ".tmp";
             // Open input file and output file
+            #region second_pass
             using (rdFolia = XmlReader.Create(new StreamReader(sFileIn))) {
               StreamWriter wrTmp = new StreamWriter(sFileTmp);
               using (wrFolia = XmlWriter.Create(wrTmp, wrSet)) {
@@ -363,9 +373,11 @@ namespace FoliaParse {
                 // =============================
                 iSentNum = 0;
                 // Walk through the input file
+                #region walk_input_file
                 while (!rdFolia.EOF && rdFolia.Read()) {
                   // Check what this is
                   if (rdFolia.IsStartElement("annotations")) {
+                    #region treat_annotations
                     // Get the <annotations> section and adapt it
                     String sAnnot = rdFolia.ReadOuterXml();
                     // (1) Put into Xml document
@@ -395,7 +407,9 @@ namespace FoliaParse {
                     wrFolia.WriteNode(rdResult, true);
                     // wrFolia.WriteString("\n");
                     wrFolia.Flush();
+                    #endregion
                   } else if (rdFolia.IsStartElement("s")) {
+                    #region folia_read_s
                     // Read the <s> element as one string
                     String sWholeS = rdFolia.ReadOuterXml();
                     iSentNum++;
@@ -419,7 +433,9 @@ namespace FoliaParse {
                     // ====================================
                      /* */
                     File.AppendAllText(sFileOutLog, sLogMsg);
+                    #endregion
 
+                    #region folia_get_list_of_words
                     // (3b) Get a list of <w> nodes under this <s>
                     List<XmlNode> lstW = oXmlTools.FixList(ndxFoliaS.SelectNodes("./descendant::df:w", nsFolia));
 
@@ -427,7 +443,9 @@ namespace FoliaParse {
                     for (int iLstW=0;iLstW < lstW.Count;iLstW++) {
                       lstW[iLstW].Attributes["xml:id"].Value = sSentId + ".w." + (iLstW + 1);
                     }
+                    #endregion
 
+                    #region alpino_read_parse
                     // (4) retrieve the parse of the tokenized sentence
                     String sAlpFile = sFileOutDir + "/" + iSentNum + ".xml";
                     if (!getAlpinoParse(sAlpFile, lstAlp, lstAlpFile)) {
@@ -437,17 +455,26 @@ namespace FoliaParse {
                     if (lstAlp.Count == 0) { errHandle.DoError("ParseOneFoliaWithAlpino", "Could not retrieve parsed alpino sentence"); return false; }
                     // (5) Retrieve the *first* alpino parse
                     XmlNode ndxAlpino = lstAlp[0].SelectSingleNode("./descendant-or-self::alpino_ds");
+                    #endregion
+
+                    #region alpino_to_psdx
                     // (6) ALpino -> Psdx: convert the <node> structure into a psdx one with <forest> and <eTree> etc
                     XmlNode ndxPsdx = objAlpPsdx.oneSent(ndxAlpino, sSentId, lstAlpFile[0], ref lstW);
+                    #endregion
+
+                    #region psdx_to_folia_s
                     // (7) Psdx -> FoLiA: Convert the <forest> structure to a FoLiA sentence <s>
                     XmlNode ndxFolia = objPsdxFolia.oneSent(ndxPsdx, sSentId, "", ref lstW);
+                    #endregion
 
+                    #region folia_insert_syntax_into_s
                     // (8) Insert the <syntax> node as child to the original <s> node
                     ndxFoliaS = pdxSrc.SelectSingleNode("./descendant-or-self::df:s[@xml:id = '" + sSentId + "']", nsFolia);
-                    // XmlDocument pdxFolia = ndxFolia.OwnerDocument;
                     XmlNode ndxSyntax = pdxSrc.ImportNode(ndxFolia.SelectSingleNode("./descendant-or-self::syntax"), true);
                     ndxFoliaS.AppendChild(ndxSyntax);
+                    #endregion
 
+                    #region folia_wordlist_adaptations_copy
                     // (9) Copy the adaptations of the word list into the [pdxSrc] list
                     oXmlTools.SetXmlDocument(pdxSrc);
                     XmlNode ndxLastW = ndxFoliaS.SelectSingleNode("./descendant::df:w[last()]", nsFolia);
@@ -475,7 +502,9 @@ namespace FoliaParse {
                           break;
                       }
                     }
+                    #endregion
 
+                    #region folia_adapt_t_nodes
                     // (9) Check for <t> nodes under the original folia
                     if (ndxFoliaS.SelectNodes("./child::t", nsFolia).Count == 0) {
                       // Get all <t> nodes in the created folia
@@ -486,11 +515,14 @@ namespace FoliaParse {
                         ndxFoliaS.PrependChild(ndxOneT);
                       }
                     }
+                    #endregion
 
+                    #region folia_write_output
                     // (10) Write the new <s> node to the writer
                     XmlReader rdResult = XmlReader.Create(new StringReader(ndxFoliaS.SelectSingleNode("./descendant-or-self::df:s", nsFolia).OuterXml));
                     wrFolia.WriteNode(rdResult, true);
-                    // wrFolia.WriteString("\n");
+                    #endregion
+
                     wrFolia.Flush();
                     rdResult.Close();
                   } else {
@@ -498,6 +530,7 @@ namespace FoliaParse {
                     WriteShallowNode(rdFolia, wrFolia);
                   }
                 }
+                #endregion
                 // Finish reading input
                 rdFolia.Close();
                 // Finish writing
@@ -508,8 +541,10 @@ namespace FoliaParse {
               wrTmp.Close();
               wrTmp = null;
             }
+            #endregion
             // ======= THIRD PASS ===============
             // Open input file and output file
+            #region third_pass
             using (StreamReader rdText = new StreamReader(sFileTmp)) {
               using (StreamWriter wrText = new StreamWriter(sFileOut)) {
                 String sLine;
@@ -526,8 +561,10 @@ namespace FoliaParse {
                 }
               }
             }
+            #endregion
 
             //  Garbage collection
+            #region garbage_collection
             if (!bKeepGarbage) {
               // Clean-up: remove temporary files as well as temporary directory
               Directory.Delete(sFileOutDir, true);
@@ -536,7 +573,9 @@ namespace FoliaParse {
               // Remove temporary file
               File.Delete(sFileTmp);
             }
+            #endregion
             break;
+            #endregion
         }
 
 

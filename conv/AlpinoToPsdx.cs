@@ -600,10 +600,10 @@ namespace FoliaParse.conv {
           XmlNode ndxBef = ndxFor.SelectSingleNode("./descendant::psdx:eTree[child::psdx:eLeaf[@n=" + (intN - 1) + "]]", nmsPsdx);
           XmlNode ndxAft = ndxFor.SelectSingleNode("./descendant::psdx:eTree[child::psdx:eLeaf[@n=" + (intN + 1) + "]]", nmsPsdx);
           // Check which situation we are in
-          if (ndxBef == null || ndxBef.Name == "forest") {
+          if (ndxBef == null || intN == 1 || ndxBef.Name == "forest") {
             // Must plug in before [ndxAft]
-            // (1) Get first eTree child under forest
-            var ndxFirst = ndxFor.SelectSingleNode("./child::psdx:eTree[not(@later)][1]", nmsPsdx);
+            // (1) Get first eTree GRAND-child under forest
+            var ndxFirst = ndxFor.SelectSingleNode("./child::psdx:eTree[not(@later)]/child::psdx:eTree[not(@later)][1]", nmsPsdx);
             // Validate there are any <eTree> children that do not have "later"
             if (ndxFirst == null) {
               // There are no <eTree> children of <forest> that are NOT marked @later, so no displacements are called for
