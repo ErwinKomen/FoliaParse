@@ -730,9 +730,10 @@ namespace FoliaParse {
                 String sLemma = "";
                 if (ndxLemma != null) {
                   sLemma = ndxLemma.Attributes["class"].Value;
+                  sLemma = sLemma.Replace(" ", "").Replace("|", "");
                 }
-                // Make sure a word does *NOT* contain spaces!!
-                String sWord = lstWords[i].Replace(" ", "");
+                // Make sure a word does *NOT* contain spaces nor vertical bar
+                String sWord = lstWords[i].Replace(" ", "").Replace("|", "");
                 // Remove non-printing characters from [sWord] and [sLemma]
                 sWord = Regex.Replace(sWord, @"\p{Cs}", "");
                 sLemma = Regex.Replace(sLemma, @"\p{Cs}", "");
@@ -794,7 +795,7 @@ namespace FoliaParse {
           startInfo.UseShellExecute = false;
           startInfo.RedirectStandardInput = true;
           startInfo.ErrorDialog = false;
-          startInfo.RedirectStandardError = true;
+          startInfo.RedirectStandardError = false;  // = true;
           // ============ DEBUG ==========
           // debug("parseAlpino: [" + sTokSent + "]");
           if (iDebugLevel>0) {
@@ -819,6 +820,8 @@ namespace FoliaParse {
           }
           // Check if ANY .xml files have been produced
           if (Directory.GetFiles(sTmpDir, "*.xml").Length == 0) {
+            // Need to do an alternative, so provide the input 
+            debug("ALP-a got no output from: " + sTokSent + "\n");
             // Try an alternative: use -slow instead of -fast
             startInfo.Arguments = ALPINO_ARGS2.Replace("$dir_name", sTmpDir);
             // Start the program *synchronously*
