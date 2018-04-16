@@ -731,9 +731,19 @@ namespace FoliaParse {
                 if (ndxLemma != null) {
                   sLemma = ndxLemma.Attributes["class"].Value;
                   sLemma = sLemma.Replace(" ", "").Replace("|", "");
+                  // Escape brackets
+                  sLemma = sLemma.Replace("(", "\\(");
+                  sLemma = sLemma.Replace(")", "\\)");
+                  sLemma = sLemma.Replace("[", "\\]");
+                  sLemma = sLemma.Replace("[", "\\]");
                 }
                 // Make sure a word does *NOT* contain spaces nor vertical bar
                 String sWord = lstWords[i].Replace(" ", "").Replace("|", "");
+                // Escape brackets
+                sWord = sWord.Replace("(", "\\(");
+                sWord = sWord.Replace(")", "\\)");
+                sWord = sWord.Replace("[", "\\]");
+                sWord = sWord.Replace("[", "\\]");
                 // Remove non-printing characters from [sWord] and [sLemma]
                 sWord = Regex.Replace(sWord, @"\p{Cs}", "");
                 sLemma = Regex.Replace(sLemma, @"\p{Cs}", "");
