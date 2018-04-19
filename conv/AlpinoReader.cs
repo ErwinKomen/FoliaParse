@@ -71,13 +71,24 @@ namespace FoliaParse.conv {
           errHandle.DoError("AlpinoReader/findSentId", "There is no [loc_arParsed]");
           return false;
         }
+
+        // ======== DEBUG =========
+        errHandle.Status("findSentId: checkpoint #1");
+        // ========================
+
         // Walk all index files from beginning until end
         for (int i = 0; i < loc_arParsed.Length; i++) {
+          // ======== DEBUG =========
+          errHandle.Status("findSentId: checkpoint #2");
+          // ========================
           // Show where we are
           errHandle.Status("findSentId: looking at " + loc_arParsed[i]);
           // Read this index file
           this.lstAlpIndex = new AlpIndex(loc_arParsed[i]);
           List<AlpIndexEl> lstThis = this.lstAlpIndex.index;
+          // ======== DEBUG =========
+          errHandle.Status("findSentId: checkpoint #3");
+          // ========================
           // Traverse the index file
           for (int j = 0; j < lstThis.Count; j++) {
             // Check if this is the correct index
