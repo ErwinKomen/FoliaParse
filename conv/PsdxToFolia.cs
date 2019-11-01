@@ -155,30 +155,9 @@ namespace FoliaParse.conv {
           XmlNode ndxCurrentNode = ndxList[intI];
           // Get to the leaf
           ndxLeaf = ndxCurrentNode.SelectSingleNode("./child::eLeaf[1]");
-          //// Should we increment the word counter?
-          //switch (ndxLeaf.Attributes["Type"].Value) {
-          //  case "Star":
-          //  case "Zero":
-          //    // Create a unique id for this star/zero item
-          //    strWid = strSid +".z." + iStarId;
-          //    // Keep count of the star/zero items
-          //    iStarId++;
-          //    break;
-          //  default:
-          //    // Retrieve the original <w> id 
-          //    strWid = lWords[iWordCount].Attributes["xml:id"].Value;
-          //    // Keep track of the count in the [lWords] list
-          //    iWordCount++;                                           
-          //    break;
-          //}
-          ////if (intI < lWords.Count) {
-          ////  strWid = lWords[intI].Attributes["xml:id"].Value;
-          ////} else {
-          ////  strWid = strSid + "." + (intI + 1);
-          ////}
-          strWid = strSid + "." + (intI + 1);
 
           // Create a new <w> node under <s>
+          strWid = strSid + "." + (intI + 1);
           ndxW = oXmlTools.AddXmlChild(ndxS, "w", "xml:id", strWid, "attribute", 
             "class", ndxLeaf.Attributes["Type"].Value, "attribute", 
             "t", ndxLeaf.Attributes["Text"].Value, "child");
@@ -326,29 +305,9 @@ namespace FoliaParse.conv {
               }
               break;
           }
+
           // Add the <wref> element pointing to the <eLeaf> within Folia
           oXmlTools.SetXmlDocument(ndxSu.OwnerDocument);
-
-          String tValue = "";
-          // Method 1:
-          tValue = ndxLeaf.Attributes["Text"].Value;
-          // Method 2: look for the correct item in [lWords]
-          foreach (XmlNode ndxItem in lWords) {
-            // Is this the one?
-            if (ndxItem.Attributes["xml:id"].Value == strWid) {
-              // Found it
-              XmlNode ndxFoundItem = ndxItem.SelectSingleNode("./child::df:t", nsDF);
-              if (ndxFoundItem == null) {
-                int iStop = 1;
-                // This is a star, so return empty
-                tValue = "";
-              } else {
-                tValue = ndxFoundItem.InnerText;
-              }
-              break;
-            }
-          }
-
           ndxWref = oXmlTools.AddXmlChild(ndxSu, "wref", 
             "id", strWid, "attribute", 
             "t", ndxLeaf.Attributes["Text"].Value, "attribute");

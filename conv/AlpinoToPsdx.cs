@@ -215,24 +215,6 @@ namespace FoliaParse.conv {
               break;
             }
           }
-          /*
-          // Check if this is the right version of Alpino
-          if (ndxThis.Attributes["postag"] == null) {
-            if (!this.loc_bVersionOkay ) {
-              // This is NOT the right version of alpino...
-              errHandle.DoError("OneAlpinoToPsdxForest",
-                "Sorry, this is *not* the right (latest) version of Alpino" +
-                "\nThe correct version should have attribute @pt and/or @postag on the @word level\n"+
-                "Mismatching line:\n" + ndxThisWithinLoop.OuterXml);
-              return false;
-            } else {
-              // Look for another tag
-              sPosTag = (ndxThis.Attributes["pos"] == null) ? "unknown" :  ndxThis.Attributes["pos"].Value;
-            }
-          } else {
-            sPosTag = ndxThis.Attributes["postag"].Value;
-            this.loc_bVersionOkay = true;
-          }*/
           // Default values
           strType = "Vern";
           // Check for potential problem
